@@ -27,10 +27,23 @@
         ref="invoiceFilter" />
 
     <int:channel id = "filteredInvoicesChannel" />
+    
+   
+   
+    <int:transformer input-channel="filteredInvoicesChannel" output-channel="calculatingOrdersChannel" ref="orderSaverHandler" />
+    
+    <int:channel id = "calculatingOrdersChannel" />
+    
+    <int:filter input-channel="calculatingOrdersChannel" output-channel="filteredCalculatingOrdersChannel" ref="rebateFilter" />
+    
+    <int:channel id = "filteredCalculatingOrdersChannel" />
+    
 
-    <int:recipient-list-router input-channel="filteredInvoicesChannel">
-        <int:recipient channel = "foreignTransactions" selector-expression="payload.foreign"/>
-        <int:recipient channel = "localTransactions" selector-expression="!payload.foreign" />
+
+    <int:recipient-list-router input-channel="filteredCalculatingOrdersChannel">
+        <int:recipient channel = "foreignTransactions" selector-expression="payload.types>=1"/>
+        <int:recipient channel = "localTransactions" selector-expression="payload.types>=1"/>
+<!--         <int:recipient channel = "localTransactions" selector-expression="payload.type==2" /> -->
     </int:recipient-list-router>
 
     <int:channel id = "foreignTransactions" />
@@ -39,12 +52,12 @@
     <int:transformer
         input-channel="localTransactions"
         output-channel="bankingChannel"
-        ref="localPaymentCreator" />
+        ref="localOrderCreator" />
 
     <int:transformer
         input-channel="foreignTransactions"
         output-channel="bankingChannel"
-        ref="foreignPaymentCreator" />
+        ref="foreignOrderCreator" />
 
     <int:channel id = "bankingChannel">
         <int:queue capacity="1000" />
